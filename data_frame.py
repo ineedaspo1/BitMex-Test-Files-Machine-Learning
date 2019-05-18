@@ -237,8 +237,6 @@ def MACD(prices,x = 12, y = 26, z = 9):
 ###################################### Data Frame Construction ########################################
 def export_db():
     df = pd.DataFrame(change)
-    #df['Price'] = price_data
-    #df['Y'] = change
     df['Volume'] = Volume
     df['Volume_rsi'] = calculateRSI(Volume, n = 14)
     df['RSi_5'] = calculateRSI(price_data, n = 5)
@@ -254,8 +252,16 @@ def export_db():
     df['ATR_14'] = ATR(TR(),14)
     df['ATR_20'] = ATR(TR(),20)
     df['ATR_48'] = ATR(TR(),48)
-    
-    
+    df['BBL_5_1'] = BB_low(price_data, n=5, f = 1)
+    df['BBL_10_1'] = BB_low(price_data, n=10, f = 1)
+    df['BBL_15_1'] = BB_low(price_data, n=15, f = 1)
+    df['BBL_24_1'] = BB_low(price_data, n=24, f = 1)
+    df['BBL_48_1'] = BB_low(price_data, n=48, f = 1)
+    df['BBH_5_1'] = BB_high(price_data, n=5, f = 1)
+    df['BBH_10_1'] = BB_high(price_data, n=10, f = 1)
+    df['BBH_15_1'] = BB_high(price_data, n=15, f = 1)
+    df['BBH_24_1'] = BB_high(price_data, n=24, f = 1)
+    df['BBH_48_1'] = BB_high(price_data, n=48, f = 1)
     
     df.drop(df.tail(1).index,inplace=True)
     

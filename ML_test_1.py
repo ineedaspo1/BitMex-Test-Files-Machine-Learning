@@ -12,19 +12,25 @@ from sklearn.metrics import explained_variance_score
 file_path = '/Users/kylekoshiyama/Desktop/BitMex_Bot/data_frame.csv'
 dataset = np.loadtxt(file_path, delimiter=",")
 
+run = False
+run = True
 
-x = dataset[:,1:15]
+
+x = dataset[:,1:28]
 y = dataset[:,0]
 #price = dataset[:,1]
 #print(len(x))
 #x = x.reshape((11639,4))
 #y = y.reshape((11639,))
-cut = 15000
-offset = 5000
+cut = 12000
+offset = 0
+fin = 3000
 x_train = x[offset:cut]
 y_train = y[offset:cut]
-x_test = x[cut:]
-y_test = y[cut:]
+x_test = x[cut:-fin]
+y_test = y[cut:-fin]
+x_fin = x[fin:]
+
 
 
 def NN(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test, shape = 13):
@@ -67,7 +73,8 @@ def SVM(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test):
     svclassifier = SVC(kernel='linear')  
     svclassifier.fit(x_train, y_train)
     predictions = svclassifier.predict(x_test) 
-    #print("Explained Variance:", explained_variance_score(y_test, predictions))
+    print("Explained Variance:", explained_variance_score(y_test, predictions))
+    print(np.mean(predictions))
     
     return predictions
 
@@ -75,8 +82,15 @@ def SVM(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test):
 
 ################################### BackTester ##############################3
 
+
 price = np.loadtxt('/Users/kylekoshiyama/Desktop/BitMex_Bot//list_price.csv', delimiter=",")
-test = list(zip(random_forrest(),price))
+if run == True:
+    test = list(zip(random_forrest(),price))
+
+
+    
+#price = np.loadtxt('/Users/kylekoshiyama/Desktop/BitMex_Bot//list_price.csv', delimiter=",")
+#test = list(zip(random_forrest(),price))
 #test = list(zip(NN(shape=13),price))
 #test = list(zip(SVM(),price))
 
@@ -165,53 +179,42 @@ def Backtester(test, lower_bound, higher_bound):
     print('Max Drawdown =', max_drawdown)
     print('Current Position =', current_value)   
     
-    return net_profit 
+    return net_profit, trade_count, win_ratio 
 
 ######################### Optimizer ##########################
 
-def threshold_optimizer(prices = price_data, lb_limit, ub_limit, 
+def threshold_optimizer(test, lb_limit, ub_limit, 
                         trade_min = 0, win_thresh = 0, max_drawdown_thresh = -10000):
     max_profit = 0
     optimal_low = 0
     optimal_high = 0
     optimal_rsi = 0
     #max_win = 0
-    for m in range(RSI_start_range, RSI_finish_range, 1):
-        RSI = calculateRSI(prices, m) 
-        test = (list(zip(RSI, prices)))
-        the_range = np.arange(range_val_low, range_val_high, 1.0)       
-        length = len(the_range)                                         
-        #for k in np.arange(range_val_low, range_val_high, 1.0):
-            #for i in np.arange(range_val_low, range_val_high, 1.0):
-        for k in range(0, length):
-            for i in range(k + 1, length):
-                info = RSI_Backtester(test, the_range[i], the_range[k])
-                run_profit = info[0]
-                trade_count = info[1]
-                win_ratio = info[2]
-                #run_profit = RSI_Backtester(test, i, k)[0]
-                #trade_count = RSI_Backtester(test, i, k)[1]
-                #win_ratio = RSI_Backtester(test, i, k)[2]
-                #max_drawdown = RSI_Backtester(test, i, k)[3]
-                diff_1 = int(abs(the_range[k]-the_range[i]))
-                diff_2 = int(abs(the_range[i]-the_range[k]))
-                print(max_profit)
-                print(run_profit)
-                print(m)
-                print(the_range[k])
-                # print(k)
-                print(the_range[i])
-                # print(i)
-                print(win_ratio)
-                print()
-                if run_profit > max_profit and trade_count >= trade_min and win_ratio >= win_thresh and diff_1 > 15 and diff_2 > 15:
-                #if win_ratio > max_win and trade_count >= trade_min and max_drawdown_thresh <= max_drawdown :
-                    max_profit = run_profit
-                    optimal_low = the_range[i]
-                    # optimal_low = i
-                    optimal_high = the_range[k]
-                    # optimal_high = k
-                    optimal_rsi = m
+    the_range = np.arange(lb_limit, ub_limit, 0.05)       
+    length = len(the_range)                                         
+    for k in range(0, length):
+        for i in range(k + 1, length):
+            info = Backtester(test, the_range[i], the_range[k])
+            run_profit = info[0]
+            trade_count = info[1]
+            win_ratio = info[2]
+            diff_1 = int(abs(the_range[k]-the_range[i]))
+            diff_2 = int(abs(the_range[i]-the_range[k]))
+            print(max_profit)
+            print(run_profit)
+            print(the_range[k])
+            # print(k)
+            print(the_range[i])
+            # print(i)
+            print(win_ratio)
+            print()
+            if run_profit > max_profit and trade_count >= trade_min and win_ratio >= win_thresh and diff_1 > 15 and diff_2 > 15:
+            #if win_ratio > max_win and trade_count >= trade_min and max_drawdown_thresh <= max_drawdown :
+                max_profit = run_profit
+                optimal_low = the_range[i]
+                # optimal_low = i
+                optimal_high = the_range[k]
+                # optimal_high = k
    
     print('Max Profit =', max_profit)
     print('Optimal RSI =', optimal_rsi)
@@ -222,6 +225,5 @@ def threshold_optimizer(prices = price_data, lb_limit, ub_limit,
         
 
 if __name__ == "__main__":
-    
     print('human clit')
     
