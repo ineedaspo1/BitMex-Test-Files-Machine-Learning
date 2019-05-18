@@ -9,7 +9,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import explained_variance_score
 
 
-file_path = '/Users/kylekoshiyama/Desktop/Bot_2.0/data_frame.csv'
+file_path = '/Users/kylekoshiyama/Desktop/BitMex_Bot/data_frame.csv'
 dataset = np.loadtxt(file_path, delimiter=",")
 
 
@@ -74,7 +74,7 @@ def SVM(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test):
 
 ################################### BackTester ##############################3
 
-price = np.loadtxt('/Users/kylekoshiyama/Desktop/Bot_2.0/list_price.csv', delimiter=",")
+price = np.loadtxt('/Users/kylekoshiyama/Desktop/BitMex_Bot//list_price.csv', delimiter=",")
 #test = list(zip(random_forrest(),price))
 test = list(zip(NN(shape=13),price))
 #test = list(zip(SVM(),price))
