@@ -6,6 +6,7 @@ import os
 ####################################### Pull DATA from SQL ######################################
 conn = sqlite3.connect('BitMex_hist.db')
 cur = conn.cursor()
+#cur.execute('SELECT * FROM OHCL')
 cur.execute('SELECT * FROM OHCL')
 price_data = []
 sql_data = []
@@ -133,7 +134,8 @@ def ATR(TR, n = 14):
     ATR.append(first_val)
     for i in range(n, len(TR)):
         ATR.append((((ATR[-1] * (n-1)) + TR[i])/n))
-        ATR_slope.append((TR[i] - ATR[-1])/(2*(TR[i]+ATR[-1])))
+        #ATR_slope.append((TR[i] - ATR[-1])/(2*(TR[i]+ATR[-1]))) #old way, seems to work well
+        ATR_slope.append((TR[i] - ATR[-1])/((TR[i]+ATR[-1])/2))
     for i in range(n-1):
         ATR.insert(0,first_val)   
         ATR_slope.insert(0,first_val)    
@@ -231,37 +233,46 @@ def MACD(prices,x = 12, y = 26, z = 9):
     
     return new_hist
 
-
+def slope(vals):
+    slope = []
+    last_val = 0
+    for i in vals:
+        if last_val == 0:
+            slope.append(0)
+        else:    
+            slope.append((i - last_val)/((i+last_val)/2))
+        last_val = i
+    return slope
 
 
 ###################################### Data Frame Construction ########################################
 def export_db():
     df = pd.DataFrame(change)
+    df['ATR_2'] = ATR(TR(),2)
+    df['slope_ATR2'] = slope(ATR(TR(),2))
+    df['ATR_3'] = ATR(TR(),3)
+    df['slope_ATR2'] = slope(ATR(TR(),3))
+    df['ATR_7'] = ATR(TR(),7)
+    df['Slope ATR_2'] = slope(ATR(TR(),7))
     df['Volume'] = Volume
-    df['Volume_rsi'] = calculateRSI(Volume, n = 14)
-    df['RSi_5'] = calculateRSI(price_data, n = 5)
+    df['Slope Volume'] = slope(Volume)
+    df['Volume_rsi_3'] = calculateRSI(Volume, n = 3)
+    df['Slope Volume_rsi_3'] = slope(calculateRSI(Volume, n = 3))
+    df['Volume_rsi_5'] = calculateRSI(Volume, n = 5)
+    df['Volume_rsi_14'] = calculateRSI(Volume, n = 14)
+    df['RSi_5'] = calculateRSI(price_data, n = 5)    
     df['RSi_7'] = calculateRSI(price_data, n = 7)
-    df['RSi_10'] = calculateRSI(price_data, n = 10)
-    df['RSi_14'] = calculateRSI(price_data, n = 14)
-    df['RSi_24'] = calculateRSI(price_data, n = 24)
     df['MACD_standard'] = MACD(price_data)
-    df['MACD_short'] = MACD(price_data, 6,13,4)
-    df['MACD_LONG'] = MACD(price_data, 15, 34, 12)
+    df['MACD_short'] = MACD(price_data, 3,5,4)     
+    df['MACD_LONG'] = MACD(price_data, 5, 10, 6)                      
+    df['ATR5_rsi5'] = calculateRSI(ATR(TR(),3), n = 5)
     df['ATR_5'] = ATR(TR(),5)
+    df['ATR5_rsi5'] = calculateRSI(ATR(TR(),5), n = 5)
     df['ATR_7'] = ATR(TR(),7)
     df['ATR_14'] = ATR(TR(),14)
-    df['ATR_20'] = ATR(TR(),20)
-    df['ATR_48'] = ATR(TR(),48)
-    df['BBL_5_1'] = BB_low(price_data, n=5, f = 1)
-    df['BBL_10_1'] = BB_low(price_data, n=10, f = 1)
-    df['BBL_15_1'] = BB_low(price_data, n=15, f = 1)
-    df['BBL_24_1'] = BB_low(price_data, n=24, f = 1)
-    df['BBL_48_1'] = BB_low(price_data, n=48, f = 1)
-    df['BBH_5_1'] = BB_high(price_data, n=5, f = 1)
-    df['BBH_10_1'] = BB_high(price_data, n=10, f = 1)
-    df['BBH_15_1'] = BB_high(price_data, n=15, f = 1)
-    df['BBH_24_1'] = BB_high(price_data, n=24, f = 1)
-    df['BBH_48_1'] = BB_high(price_data, n=48, f = 1)
+
+
+
     
     df.drop(df.tail(1).index,inplace=True)
     

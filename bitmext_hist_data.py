@@ -18,7 +18,7 @@ def get_data(year, m):
     cur = conn.cursor()
     month_map = {1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12:31}
     #str1 = 'https://www.bitmex.com/api/v1/trade/bucketed?binSize=1h&partial=false&symbol=XBTUSD&count=24&reverse=false&startTime='
-    str1 = 'https://www.bitmex.com/api/v1/trade/bucketed?binSize=1h&partial=false&symbol=ETHUSD&count=24&reverse=false&startTime='
+    str1 = 'https://www.bitmex.com/api/v1/trade/bucketed?binSize=5m&partial=false&symbol=XBTUSD&count=288&reverse=false&startTime='
     day = 1
     month = 1
     for k in range(m):
@@ -43,7 +43,7 @@ def get_data(year, m):
                 Close = i['close']
                 Low = i['low']
                 Volume = i['volume']
-                cur.execute('INSERT INTO ETH_OHCL (Time, VWAP, Open, High, Close, Low, Volume) VALUES ( ?, ?, ?, ?, ?, ?, ? )', (Time, Vwap, Open, High, Low, Close, Volume))
+                cur.execute('INSERT INTO five_min (Time, VWAP, Open, High, Close, Low, Volume) VALUES ( ?, ?, ?, ?, ?, ?, ? )', (Time, Vwap, Open, High, Low, Close, Volume))
                 conn.commit()
             day += 1
             if day > month_map[month]:
@@ -88,8 +88,8 @@ def get_data_month(month, year):
 
 if __name__ == "__main__":
     
-    make_table('ETH_OHCL')
+    #make_table('five_Min')
     #get_data_month(4,'2017')
-    get_data('2018',12)
+    get_data('2019',4)
 
 

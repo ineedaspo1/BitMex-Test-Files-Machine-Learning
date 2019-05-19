@@ -5,26 +5,29 @@ from tensorflow.keras.optimizers import SGD
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn import svm
 from sklearn.svm import SVC  
 from sklearn.metrics import explained_variance_score
-
+from sklearn import metrics
+from sklearn.svm import SVR
+from sklearn.linear_model import LogisticRegression
 
 file_path = '/Users/kylekoshiyama/Desktop/BitMex_Bot/data_frame.csv'
 dataset = np.loadtxt(file_path, delimiter=",")
 
 run = False
-run = True
+#run = True
 
 
-x = dataset[:,1:28]
+x = dataset[:,1:14]  #20,000 hours and 244,799 on 5 min 
 y = dataset[:,0]
 #price = dataset[:,1]
 #print(len(x))
 #x = x.reshape((11639,4))
 #y = y.reshape((11639,))
-cut = 12000
-offset = 0
-fin = 3000
+cut = 17500
+offset = 2000
+fin = 1
 x_train = x[offset:cut]
 y_train = y[offset:cut]
 x_test = x[cut:-fin]
@@ -32,47 +35,44 @@ y_test = y[cut:-fin]
 x_fin = x[fin:]
 
 
-
-def NN(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test, shape = 13):
+def NN(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test, shape = 28):
     model = keras.Sequential()
-    model.add(keras.layers.Dense(12,input_shape=(13,), activation='relu'))
-    model.add(keras.layers.Dense(9, activation='sigmoid'))
+    model.add(keras.layers.Dense(50,input_shape=(shape,), activation='relu'))
+    model.add(keras.layers.Dense(25, activation='sigmoid'))
     #model.add(keras.layers.Dense(6, activation='relu'))
-    model.add(keras.layers.Dense(6, activation='tanh'))
+    model.add(keras.layers.Dense(25, activation='tanh'))
     model.add(keras.layers.Dense(1, activation='sigmoid'))
     #model.add(keras.layers.Dense(1))
-    model.compile(loss = "binary_crossentropy", optimizer = SGD(lr=0.01), metrics = ['mse', 'acc'])
-    #model.compile(loss='binary_crossentropy', optimizer='adam', metrics'mae', 'acc'
+    #model.compile(loss = "binary_crossentropy", optimizer = SGD(lr=0.005), metrics = ['mse', 'acc'])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics = ['mae', 'acc'])
     model.fit(x_train, y_train, epochs=5)
     #scores = model.evaluate(x_train, y_train)
     
-    ynew = model.predict_proba(x_test)
-    predictions = []
-    for i in range(len(x_test)):
-        predictions.append(ynew[i])
-        print(ynew[i])
+    predictions = model.predict_proba(x_test)
     print("Explained Variance:", explained_variance_score(y_test, predictions))
     
     return predictions
 
 
-def random_forrest(x_train = x_train, y_train = y_train, x_test = x_test):
+def random_forrest(x_train = x_train, y_train = y_train, x_test = x_test, y_test=y_test):
     sc = StandardScaler()  
     x_train = sc.fit_transform(x_train)  
     x_test = sc.transform(x_test)  
-    regressor = RandomForestRegressor(n_estimators=25, random_state=0)  
-    #regressor = GradientBoostingClassifier(n_estimators=25, learning_rate=0.05, max_depth=None, random_state=0).fit(x_train, y_train)
+    regressor = RandomForestRegressor(n_estimators=125, random_state=0, n_jobs = -1)  
+    #regressor = GradientBoostingClassifier(n_estimators=100, learning_rate=0.05, max_depth=None, random_state=0)
     regressor.fit(x_train, y_train) 
     predictions = regressor.predict(x_test)
+    print(regressor.feature_importances_)
     print("Explained Variance:", explained_variance_score(y_test, predictions))
     print(np.mean(predictions))
     return predictions
 
 
-def SVM(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test):
-    svclassifier = SVC(kernel='linear')  
-    svclassifier.fit(x_train, y_train)
-    predictions = svclassifier.predict(x_test) 
+def Logistic(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test):
+    #log = LogisticRegression(penalty='l1', solver='liblinear')
+    log = LogisticRegression()
+    log.fit(x_train, y_train)
+    predictions = log.predict(x_test)
     print("Explained Variance:", explained_variance_score(y_test, predictions))
     print(np.mean(predictions))
     
@@ -225,5 +225,8 @@ def threshold_optimizer(test, lb_limit, ub_limit,
         
 
 if __name__ == "__main__":
-    print('human clit')
+    #NN()
+    random_forrest()
+    #Logistic()
+    print('you got this')
     
