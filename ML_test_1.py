@@ -16,23 +16,24 @@ file_path = '/Users/kylekoshiyama/Desktop/BitMex_Bot/data_frame.csv'
 dataset = np.loadtxt(file_path, delimiter=",")
 
 run = False
-#run = True
+run = True
 
 
-x = dataset[:,1:14]  #20,000 hours and 244,799 on 5 min 
+x = dataset[:,1:15]  #20,000 hours and 244,799 on 5 min 
 y = dataset[:,0]
 #price = dataset[:,1]
 #print(len(x))
 #x = x.reshape((11639,4))
 #y = y.reshape((11639,))
-cut = 17500
-offset = 2000
+cut = 17000
+offset = 5000
 fin = 1
 x_train = x[offset:cut]
 y_train = y[offset:cut]
 x_test = x[cut:-fin]
 y_test = y[cut:-fin]
 x_fin = x[fin:]
+
 
 
 def NN(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_test, shape = 28):
@@ -64,6 +65,7 @@ def random_forrest(x_train = x_train, y_train = y_train, x_test = x_test, y_test
     predictions = regressor.predict(x_test)
     print(regressor.feature_importances_)
     print("Explained Variance:", explained_variance_score(y_test, predictions))
+    print("R^2: {}".format(regressor.score(x_test, y_test)))
     print(np.mean(predictions))
     return predictions
 
@@ -84,9 +86,13 @@ def Logistic(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_t
 
 
 price = np.loadtxt('/Users/kylekoshiyama/Desktop/BitMex_Bot//list_price.csv', delimiter=",")
-if run == True:
-    test = list(zip(random_forrest(),price))
 
+rf = random_forrest()
+length = len(rf)
+sample = price[:-length]
+if run == True:
+    test = list(zip(rf,sample))
+    #testb = list(zip(random_forrest()[len(x_fin):], price))
 
     
 #price = np.loadtxt('/Users/kylekoshiyama/Desktop/BitMex_Bot//list_price.csv', delimiter=",")
@@ -118,7 +124,7 @@ def Backtester(test, lower_bound, higher_bound):
         elif current_value > 0: #if we are long
             if i[0] <= higher_bound:
                 net_profit += (i[1] - current_value) #current Value - what we bought at
-                print('Profit from Long =', (i[1] - current_value))
+                #print('Profit from Long =', (i[1] - current_value))
                 if (i[1] - current_value) > 0:
                     good_trade_count += 1
                 else:
@@ -128,7 +134,7 @@ def Backtester(test, lower_bound, higher_bound):
         elif current_value < 0: #if we are currently short
             if i[0] >= lower_bound:
                 net_profit += ((-current_value) - i[1])
-                print('Profit from Short =', ((-current_value) - i[1]))
+                #print('Profit from Short =', ((-current_value) - i[1]))
                 if ((-current_value) - i[1]) > 0:
                     good_trade_count += 1
                 else:
@@ -158,7 +164,7 @@ def Backtester(test, lower_bound, higher_bound):
         return_difference.append(k[0]-k[1])    
     
     
-    
+    '''
     plt.plot(run_returns, label = 'Model')
     #plt.plot(price_change_hist)
     plt.plot(price_hist, label = 'Market Returns')
@@ -177,47 +183,37 @@ def Backtester(test, lower_bound, higher_bound):
     print('Number of trades =', trade_count)     
     print('Win Ratio =', win_ratio)
     print('Max Drawdown =', max_drawdown)
-    print('Current Position =', current_value)   
+    print('Current Position =', current_value)'''
     
     return net_profit, trade_count, win_ratio 
 
 ######################### Optimizer ##########################
 
-def threshold_optimizer(test, lb_limit, ub_limit, 
+def threshold_optimizer(test, lb_limit = 0.2, ub_limit = 0.8, 
                         trade_min = 0, win_thresh = 0, max_drawdown_thresh = -10000):
     max_profit = 0
     optimal_low = 0
-    optimal_high = 0
-    optimal_rsi = 0
-    #max_win = 0
-    the_range = np.arange(lb_limit, ub_limit, 0.05)       
-    length = len(the_range)                                         
-    for k in range(0, length):
-        for i in range(k + 1, length):
-            info = Backtester(test, the_range[i], the_range[k])
+    optimal_high = 0      
+    #length = len(the_range)                                         
+    for k in np.arange(lb_limit, ub_limit, 0.01):
+        for i in np.arange(lb_limit, ub_limit, 0.01):
+            info = Backtester(test,k, i)
             run_profit = info[0]
             trade_count = info[1]
             win_ratio = info[2]
-            diff_1 = int(abs(the_range[k]-the_range[i]))
-            diff_2 = int(abs(the_range[i]-the_range[k]))
             print(max_profit)
             print(run_profit)
-            print(the_range[k])
-            # print(k)
-            print(the_range[i])
-            # print(i)
+            print(k)
+            print(i)
             print(win_ratio)
             print()
-            if run_profit > max_profit and trade_count >= trade_min and win_ratio >= win_thresh and diff_1 > 15 and diff_2 > 15:
-            #if win_ratio > max_win and trade_count >= trade_min and max_drawdown_thresh <= max_drawdown :
+            if run_profit > max_profit and trade_count >= trade_min and win_ratio >= win_thresh:
                 max_profit = run_profit
-                optimal_low = the_range[i]
-                # optimal_low = i
-                optimal_high = the_range[k]
-                # optimal_high = k
+                optimal_low = k
+                optimal_high = i
+
    
     print('Max Profit =', max_profit)
-    print('Optimal RSI =', optimal_rsi)
     print('Optimal Low =', optimal_low)
     print('Optimal High =', optimal_high)
 
@@ -226,7 +222,8 @@ def threshold_optimizer(test, lb_limit, ub_limit,
 
 if __name__ == "__main__":
     #NN()
-    random_forrest()
-    #Logistic()
+    #random_forrest()
+    threshold_optimizer(test, 0.2, 0.8, trade_min = 50, win_thresh = 1.15)
+    #Backtester(test, 0.2, 0.7)
     print('you got this')
     

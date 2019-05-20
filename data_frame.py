@@ -245,9 +245,34 @@ def slope(vals):
     return slope
 
 
+def streek(vals):
+    streek = []
+    count = 0
+    last_val = 0
+    for i in vals:
+        if i > last_val: #if the current value is positive
+            if count >= 0:
+                count += 1
+            elif count < 0:
+                count = 1
+        elif i < last_val: #if the current value is negative
+            if count <= 0:  #if the count was negative then you subtract one
+                count -= 1
+            elif count > 0: #if the count was postive then you make the count negative 1
+                count = -1
+        last_val = i
+        streek.append(count)
+    
+    return streek
+       
+            
+
+
 ###################################### Data Frame Construction ########################################
 def export_db():
     df = pd.DataFrame(change)
+    df['streek'] = streek(price_data)
+    df['streek atr2'] = streek(ATR(TR(),2))
     df['ATR_2'] = ATR(TR(),2)
     df['slope_ATR2'] = slope(ATR(TR(),2))
     df['ATR_3'] = ATR(TR(),3)
