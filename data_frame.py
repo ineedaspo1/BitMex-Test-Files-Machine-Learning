@@ -71,6 +71,17 @@ for row in sql_data:                                     #For Low Prices
 
 frame = list(zip(Open,High,Close,Low))
 
+'''
+Eprice_data = []
+
+cur.execute('SELECT * FROM ETH_OHCL')
+for row in sql_data:                                     # for ETH_Vwap
+    if type(row[1]) ==  float:
+        Eprice_data.append(row[1]) 
+        
+    elif type(row[1]) == int:
+        Eprice_data.append(row[1]*1.0)
+'''
 
 change = []
 last_val = 0
@@ -213,6 +224,26 @@ def EMA(prices, n = 10):
 '''ema_5 = EMA(price_data, 5)
 ema_10 = EMA(price_data, 10)'''
 
+
+def MA(prices, n):
+    first_Avg = np.mean(prices[:n-1])
+    ema = [first_Avg]
+    for i in range(n, len(prices)):
+        hold = ((prices[i]-ema[-1])*1)+ema[-1]
+        ema.append(hold)
+    for i in range(n-1):
+        ema.insert(0,first_Avg)
+ 
+    return ema     
+
+
+SMA_10 = MA(price_data, 10)
+SMA_20 = MA(price_data, 20)
+SMA_30 = MA(price_data, 30)
+
+
+
+
     
 def MACD(prices,x = 12, y = 26, z = 9):
     low = EMA(prices, x)
@@ -237,10 +268,18 @@ def slope(vals):
     slope = []
     last_val = 0
     for i in vals:
-        if last_val == 0:
+        if i == i + last_val:
+            slope.append(0)
+        elif last_val == 0:
             slope.append(0)
         else:    
-            slope.append((i - last_val)/((i+last_val)/2))
+            change = (i - last_val)/((i+last_val)/2)
+            if change == float('-inf'):
+                slope.append(-0.1)
+            elif change == float('inf'):
+                slope.append(0.1)    
+            else:
+                slope.append(change)
         last_val = i
     return slope
 
@@ -265,8 +304,9 @@ def streek(vals):
     
     return streek
        
-            
-
+d10 = slope(slope(MA(price_data, 2)))      
+d20 = slope(slope(MA(price_data, 4)))
+d30 = slope(slope(MA(price_data, 5)))
 
 ###################################### Data Frame Construction ########################################
 def export_db():
@@ -298,6 +338,7 @@ def export_db():
 
 
 
+
     
     df.drop(df.tail(1).index,inplace=True)
     
@@ -313,6 +354,9 @@ def export_db():
     if os.path.exists('list_price.csv'):
         os.remove('list_price.csv')
     df2.to_csv('list_price.csv', mode = 'w', index=False, header = None)
+    
+    
 
 if __name__ == "__main__":
     export_db()
+    print('yeet')
