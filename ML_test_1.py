@@ -16,17 +16,17 @@ file_path = '/Users/kylekoshiyama/Desktop/BitMex_Bot/data_frame.csv'
 dataset = np.loadtxt(file_path, delimiter=",")
 
 run = False
-run = True
+#run = True
 
 
-x = dataset[:,1:15]  #20,000 hours and 244,799 on 5 min 
+x = dataset[:,1:20]  #20,000 hours and 244,799 on 5 min 
 y = dataset[:,0]
 #price = dataset[:,1]
 #print(len(x))
 #x = x.reshape((11639,4))
 #y = y.reshape((11639,))
-cut = 17000
-offset = 5000
+cut = 16000
+offset = 1000
 fin = 1
 x_train = x[offset:cut]
 y_train = y[offset:cut]
@@ -87,12 +87,13 @@ def Logistic(x_train = x_train, y_train = y_train, x_test = x_test, y_test = y_t
 
 price = np.loadtxt('/Users/kylekoshiyama/Desktop/BitMex_Bot//list_price.csv', delimiter=",")
 
+'''
 rf = random_forrest()
 length = len(rf)
 sample = price[:-length]
 if run == True:
     test = list(zip(rf,sample))
-    #testb = list(zip(random_forrest()[len(x_fin):], price))
+    #testb = list(zip(random_forrest()[len(x_fin):], price))'''
 
     
 #price = np.loadtxt('/Users/kylekoshiyama/Desktop/BitMex_Bot//list_price.csv', delimiter=",")
@@ -119,10 +120,10 @@ def Backtester(test, lower_bound, higher_bound):
         if first_price == 0:
             first_price = i[1]
         if current_value == 0: #to start the backetester
-            if i[0] <= lower_bound: #starts backtester with a buy position
+            if i[0] >= lower_bound: #starts backtester with a buy position
                 current_value += i[1] #sets the current value for the backtester
         elif current_value > 0: #if we are long
-            if i[0] <= higher_bound:
+            if i[0] <= lower_bound: #if the prediction is that it will go down
                 net_profit += (i[1] - current_value) #current Value - what we bought at
                 #print('Profit from Long =', (i[1] - current_value))
                 if (i[1] - current_value) > 0:
@@ -132,7 +133,7 @@ def Backtester(test, lower_bound, higher_bound):
                 current_value = -i[1] #now are are short
                 trade_count += 1
         elif current_value < 0: #if we are currently short
-            if i[0] >= lower_bound:
+            if i[0] >= higher_bound:
                 net_profit += ((-current_value) - i[1])
                 #print('Profit from Short =', ((-current_value) - i[1]))
                 if ((-current_value) - i[1]) > 0:
@@ -187,10 +188,99 @@ def Backtester(test, lower_bound, higher_bound):
     
     return net_profit, trade_count, win_ratio 
 
+
+def Final_Backtester(test, lower_bound, higher_bound):
+    net_profit = 0
+    current_value = 0
+    max_drawdown = 0
+    last_price = 0
+    current_diff = 0
+    trade_count = 0
+    good_trade_count = 0
+    bad_trade_count = 0
+    first_price = 0
+    price_change_hist = []
+    run_returns = []
+    price_hist = []
+    return_difference = []
+    print('Trade Log') #signal start of backtester
+    for i in test:
+        if first_price == 0:
+            first_price = i[1]
+        if current_value == 0: #to start the backetester
+            if i[0] >= lower_bound: #starts backtester with a buy position
+                current_value += i[1] #sets the current value for the backtester
+        elif current_value > 0: #if we are long
+            if i[0] <= lower_bound: #if the prediction is that it will go down
+                net_profit += (i[1] - current_value) #current Value - what we bought at
+                #print('Profit from Long =', (i[1] - current_value))
+                if (i[1] - current_value) > 0:
+                    good_trade_count += 1
+                else:
+                    bad_trade_count += 1
+                current_value = -i[1] #now are are short
+                trade_count += 1
+        elif current_value < 0: #if we are currently short
+            if i[0] >= higher_bound:
+                net_profit += ((-current_value) - i[1])
+                #print('Profit from Short =', ((-current_value) - i[1]))
+                if ((-current_value) - i[1]) > 0:
+                    good_trade_count += 1
+                else:
+                    bad_trade_count += 1
+                current_value = i[1] #now we are long
+                trade_count += 1
+        if net_profit < max_drawdown:
+            max_drawdown = net_profit
+        if last_price == 0:
+            last_price = i[1]
+        elif last_price != 0:
+            current_diff = last_price - i[1]
+            price_change_hist.append(current_diff)
+            last_price = i[1]
+        if bad_trade_count == 0:
+            win_ratio = 100
+        elif bad_trade_count != 0:
+            win_ratio = good_trade_count/bad_trade_count
+        
+        run_returns.append(net_profit)
+        price_hist.append(i[1] - first_price)
+        
+        
+        
+    l_run_diff = list(zip(run_returns, price_hist))
+    for k in l_run_diff:
+        return_difference.append(k[0]-k[1])    
+    
+    
+    
+    plt.plot(run_returns, label = 'Model')
+    #plt.plot(price_change_hist)
+    plt.plot(price_hist, label = 'Market Returns')
+    plt.title('Price Over Time')
+    plt.ylabel('Price')
+    plt.xlabel('Time (Hours)')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    
+    print()
+    print('Net Profit =', net_profit)
+    print('Alpha =', net_profit - (price_hist[-1] - price_hist[0]))
+    print('Market =', price_hist[-1] - price_hist[0])
+    print('Trading Days =', len(test)/24)
+    print('Number of trades =', trade_count)     
+    print('Win Ratio =', win_ratio)
+    print('Max Drawdown =', max_drawdown)
+    print('Current Position =', current_value)
+    
+    return net_profit, trade_count, win_ratio 
+
+
 ######################### Optimizer ##########################
 
 def threshold_optimizer(test, lb_limit = 0.2, ub_limit = 0.8, 
-                        trade_min = 0, win_thresh = 0, max_drawdown_thresh = -10000):
+                        trade_min = 0, win_thresh = 0, max_drawdown_thresh = -10000, diff_thresh = 0.1):
     max_profit = 0
     optimal_low = 0
     optimal_high = 0      
@@ -201,13 +291,15 @@ def threshold_optimizer(test, lb_limit = 0.2, ub_limit = 0.8,
             run_profit = info[0]
             trade_count = info[1]
             win_ratio = info[2]
+            diff = abs(i - k)
+            diff_2 = abs(k -i)
             print(max_profit)
             print(run_profit)
             print(k)
             print(i)
             print(win_ratio)
             print()
-            if run_profit > max_profit and trade_count >= trade_min and win_ratio >= win_thresh:
+            if run_profit > max_profit and trade_count >= trade_min and win_ratio >= win_thresh and diff_thresh < diff and diff_thresh < diff_2:
                 max_profit = run_profit
                 optimal_low = k
                 optimal_high = i
@@ -222,8 +314,8 @@ def threshold_optimizer(test, lb_limit = 0.2, ub_limit = 0.8,
 
 if __name__ == "__main__":
     #NN()
-    #random_forrest()
-    threshold_optimizer(test, 0.2, 0.8, trade_min = 50, win_thresh = 1.15)
-    #Backtester(test, 0.2, 0.7)
+    random_forrest()
+    #threshold_optimizer(test, 0.2, 0.8, trade_min = 100, win_thresh = 1.2, diff_thresh = 0.1)
+    #Final_Backtester(test, 0.2, 0.33)
     print('you got this')
     

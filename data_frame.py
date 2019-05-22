@@ -304,9 +304,6 @@ def streek(vals):
     
     return streek
        
-d10 = slope(slope(MA(price_data, 2)))      
-d20 = slope(slope(MA(price_data, 4)))
-d30 = slope(slope(MA(price_data, 5)))
 
 ###################################### Data Frame Construction ########################################
 def export_db():
