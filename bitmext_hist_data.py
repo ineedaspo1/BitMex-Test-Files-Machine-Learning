@@ -35,6 +35,7 @@ def get_data(year, m):
             final_str = str(str1 + year + '-' + month_2 + '-' + str(day_2) + str2)
             r = requests.get(final_str)
             data = r.json()
+            print(month, day, year)
             for i in data:
                 Time = i['timestamp']
                 Vwap = i['vwap']
