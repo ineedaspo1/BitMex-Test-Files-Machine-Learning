@@ -61,7 +61,7 @@ for row in sql_data:                                     #For Low Prices
     else:
         Low.append(Low[-1])
         
-for row in sql_data:                                     #For Low Prices
+for row in sql_data:                                     #For Volume
     if type(row[6]) ==  float:
         Volume.append(row[6])
     elif type(row[6]) == int:
@@ -235,14 +235,6 @@ def MA(prices, n):
         ema.insert(0,first_Avg)
  
     return ema     
-
-
-SMA_10 = MA(price_data, 10)
-SMA_20 = MA(price_data, 20)
-SMA_30 = MA(price_data, 30)
-
-
-
 
     
 def MACD(prices,x = 12, y = 26, z = 9):

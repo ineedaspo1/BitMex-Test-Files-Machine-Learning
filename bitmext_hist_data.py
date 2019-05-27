@@ -89,7 +89,7 @@ def get_data_month(month, year):
 
 if __name__ == "__main__":
     
-    make_table('ETH')
+    #make_table('')
     #get_data_month(4,'2017')
     get_data('2019',4)
 
