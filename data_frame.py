@@ -226,15 +226,14 @@ ema_10 = EMA(price_data, 10)'''
 
 
 def MA(prices, n):
-    first_Avg = np.mean(prices[:n-1])
-    ema = [first_Avg]
+    ma = []
     for i in range(n, len(prices)):
-        hold = ((prices[i]-ema[-1])*1)+ema[-1]
-        ema.append(hold)
-    for i in range(n-1):
-        ema.insert(0,first_Avg)
- 
-    return ema     
+        hold = prices[i-n:i]
+        avg = np.mean(hold)
+        ma.append(avg)
+    for i in range(n):
+        ma.insert(0, avg)
+    return ma     
 
     
 def MACD(prices,x = 12, y = 26, z = 9):
