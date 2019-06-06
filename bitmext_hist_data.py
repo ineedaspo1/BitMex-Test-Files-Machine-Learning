@@ -58,7 +58,7 @@ def get_data_month(month, year):
     cur = conn.cursor()
     month_map = {1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12:31}
     #str1 = 'https://www.bitmex.com/api/v1/trade/bucketed?binSize=1h&partial=false&symbol=XBTUSD&count=24&reverse=false&startTime='
-    str1 = 'https://www.bitmex.com/api/v1/trade/bucketed?binSize=1h&partial=false&symbol=ETHUSD&count=24&reverse=false&startTime='
+    str1 = 'https://www.bitmex.com/api/v1/trade/bucketed?binSize=1h&partial=false&symbol=XBTUSD&count=24&reverse=false&startTime='
     day = 1
     for i in range(month_map[month]):
         if day < 10:
@@ -90,7 +90,7 @@ def get_data_month(month, year):
 if __name__ == "__main__":
     
     #make_table('')
-    #get_data_month(4,'2017')
-    get_data('2019',4)
+    get_data_month(5,'2019')
+    #get_data('2019',4)
 
 
