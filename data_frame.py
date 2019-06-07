@@ -294,6 +294,39 @@ def streek(vals):
         streek.append(count)
     
     return streek
+
+def relative_magnitude(price_data, n = 25):
+    daily_return = slope(price_data)
+    rel_mag = []
+    for i in range(n, len(daily_return)):
+        count = 0
+        hold = daily_return[i-n:i]
+        for k in hold:
+            if daily_return[i] > k:
+                count += 1
+        rel_mag.append(count/n)        
+    for i in range(n):
+        rel_mag.insert(0, 0)
+
+    return rel_mag        
+
+j = relative_magnitude(price_data)
+rsi = calculateRSI(price_data, 3)
+streak_rsi = calculateRSI(streek(price_data),3)
+
+def connor_rsi(price_data, rsi_range = 3, magnitude_period = 25):
+    rsi = calculateRSI(price_data, rsi_range)
+    streak_rsi = calculateRSI(streek(price_data), rsi_range)
+    magnitude = relative_magnitude(price_data, magnitude_period)
+    test = list(zip(rsi, streak_rsi, magnitude))
+    connor_rsi = []
+    for i in test:
+        connor_rsi.append(np.mean(i))
+
+    return connor_rsi    
+
+connor_rsi = connor_rsi(price_data, 3, 25)
+print(connor_rsi)
        
 
 ###################################### Data Frame Construction ########################################
